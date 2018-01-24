@@ -31,7 +31,7 @@ public:
     bool generateAndInterpolate(double initTime, double dT, double endTime);
 
     bool generateAndInterpolate(std::shared_ptr<FootPrint> leftFoot, std::shared_ptr<FootPrint> rightFoot, double initTime, double dT, double endTime);
-    
+
     bool reGenerate(double initTime, double dT, double endTime, const InitialState &weightInLeftAtMergePoint);
 
     bool reGenerate(double initTime, double dT, double endTime, const InitialState &weightInLeftAtMergePoint,
@@ -43,6 +43,12 @@ public:
     bool reGenerate(double initTime, double dT, double endTime, const InitialState &weightInLeftAtMergePoint,
                     const iDynTree::Vector2 &measuredLeftPosition, double measuredLeftAngle,
                     const iDynTree::Vector2 &measuredRightPosition, double measuredRightAngle);
+
+    bool generateAndInterpolateDcm(double initTime, double dT, double endTime);
+
+    bool generateAndInterpolateDcm(std::shared_ptr<FootPrint> leftFoot, std::shared_ptr<FootPrint> rightFoot, double initTime, double dT, double endTime);
+
+    bool reGenerateDcm(double initTime, double dT, double endTime, const DcmInitialState &dcmBoundaryConditionAtMergePoint);
 };
 
 #endif // UNICYCLETRAJECTORYGENERATOR_H
