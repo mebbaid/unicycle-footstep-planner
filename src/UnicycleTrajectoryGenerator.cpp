@@ -70,7 +70,7 @@ bool UnicycleTrajectoryGenerator::reGenerate(double initTime, double dT, double 
     }
 
     return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
-      interpolate(*m_left, *m_right, initTime, dT, weightInLeftAtMergePoint);
+	interpolate(*m_left, *m_right, initTime, dT, weightInLeftAtMergePoint);
 }
 
 bool UnicycleTrajectoryGenerator::reGenerate(double initTime, double dT, double endTime, const InitialState &weightInLeftAtMergePoint,
@@ -105,7 +105,7 @@ bool UnicycleTrajectoryGenerator::reGenerate(double initTime, double dT, double 
     }
 
     return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
-      interpolate(*m_left, *m_right, initTime, dT, weightInLeftAtMergePoint, previousL, previousR);
+	interpolate(*m_left, *m_right, initTime, dT, weightInLeftAtMergePoint, previousL, previousR);
 }
 
 bool UnicycleTrajectoryGenerator::reGenerate(double initTime, double dT, double endTime, const InitialState &weightInLeftAtMergePoint,
@@ -167,7 +167,7 @@ bool UnicycleTrajectoryGenerator::reGenerate(double initTime, double dT, double 
     }
 
     return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
-      interpolate(*m_left, *m_right, initTime, dT, weightInLeftAtMergePoint, previousL, previousR);
+	interpolate(*m_left, *m_right, initTime, dT, weightInLeftAtMergePoint, previousL, previousR);
 }
 
 
@@ -201,5 +201,5 @@ bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, doub
     }
 
     return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
-      interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
+	interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
 }
