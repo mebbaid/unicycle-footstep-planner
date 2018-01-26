@@ -39,7 +39,6 @@ public:
 
     bool reGenerate(double initTime, double dT, double endTime, const InitialState &weightInLeftAtMergePoint, bool correctLeft,
                     const iDynTree::Vector2 &measuredPosition, double measuredAngle);
-
     bool reGenerate(double initTime, double dT, double endTime, const InitialState &weightInLeftAtMergePoint,
                     const iDynTree::Vector2 &measuredLeftPosition, double measuredLeftAngle,
                     const iDynTree::Vector2 &measuredRightPosition, double measuredRightAngle);
