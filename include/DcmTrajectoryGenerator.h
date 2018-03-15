@@ -342,6 +342,20 @@ class DCMTrajectoryGenerator
                                const std::vector<size_t> &phaseShift);
 
     /**
+     * Generate the Fixed Divergent Component of Motion trajectory.
+     * This method has to be called if no steps has be done!
+     * @param initPosition is the position of the DCM at the beginning of the trajectory;
+     * @param initVelocity is the velocity of the DCM at the beginning of the trajectory;
+     * @param finalPosition is the desired position of the DCM at the end of the trajectory.
+     * @param phaseShift vector containing the index when a change of phase (SS -> DS and viceversa) occours.
+     * @return true / false in case of success / failure.
+     */
+    bool generateFixStanceDCMTrajectory(const iDynTree::Vector2 &initPosition,
+                                        const iDynTree::Vector2 &initVelocity,
+                                        const iDynTree::Vector2 &finalPosition,
+                                        const std::vector<size_t> &phaseShift);
+
+    /**
      * Get the position of the Divergent Component of Motion.
      * @return a vector containing the DCM position during all the trajectory domain.
      */

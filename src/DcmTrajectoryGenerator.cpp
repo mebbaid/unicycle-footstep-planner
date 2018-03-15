@@ -476,6 +476,44 @@ void DCMTrajectoryGenerator::getFirstDoubleSupportTiming(double &doubleSupportSt
     m_phaseShift.pop_back();
 }
 
+bool DCMTrajectoryGenerator::generateFixStanceDCMTrajectory(const iDynTree::Vector2 &initPosition,
+                                                            const iDynTree::Vector2 &initVelocity,
+                                                            const iDynTree::Vector2 &finalPosition,
+                                                            const std::vector<size_t> &phaseShift)
+{
+    m_trajectoryDomain = std::make_pair(phaseShift.front(), phaseShift.back());
+
+    // reset the trajectory
+    m_trajectory.clear();
+
+    // instantiate position and velocity boundary conditions vectors
+    DCMTrajectoryPoint doubleSupportInitBoundaryCondition;
+    DCMTrajectoryPoint doubleSupportFinalBoundaryCondition;
+
+    // set the initial boundary conditions
+    doubleSupportInitBoundaryCondition.time = phaseShift.front() * m_dT;
+    doubleSupportInitBoundaryCondition.DCMPosition = initPosition;
+    doubleSupportInitBoundaryCondition.DCMVelocity = initVelocity;
+
+    // set the final boundary conditions
+    doubleSupportFinalBoundaryCondition.time = phaseShift.back() * m_dT;
+    doubleSupportFinalBoundaryCondition.DCMPosition = finalPosition;
+    doubleSupportFinalBoundaryCondition.DCMVelocity.zero();
+
+    std::shared_ptr<GeneralSupportTrajectory> newDoubleSupport = nullptr;
+    newDoubleSupport = std::make_shared<DoubleSupportTrajectory>(doubleSupportInitBoundaryCondition,
+                                                                 doubleSupportFinalBoundaryCondition);
+    // add the new Double Support phase
+    m_trajectory.push_back(newDoubleSupport);
+
+    // evaluate the DCM trajectory
+    if(!evaluateDCMTrajectory()){
+        std::cerr << "[DCM TRAJECTORY GENERATOR] Error when the whole DCM trajectory is evaluated." << std::endl;
+        return false;
+    }
+    return true;
+}
+
 bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::const_iterator> &orderedSteps,
                                                    const StepList::const_iterator &firstStanceFoot,
                                                    const iDynTree::Vector2 &initPosition,

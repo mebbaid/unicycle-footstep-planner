@@ -1002,25 +1002,35 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     initDCMPosition = DCMBoundaryConditionAtMergePoint.initialPosition;
     initDCMVelocity = DCMBoundaryConditionAtMergePoint.initialVelocity;
 
-    if(!m_DCMTrajGenerator.generateDCMTrajectory(m_orderedSteps, firstStanceFoot, initDCMPosition, initDCMVelocity, m_phaseShift)){
-       std::cerr << "[FEETINTERPOLATOR] Failed while computing the DCM trajectories." << std::endl;
-       return false;
+    if(m_orderedSteps.size() != 0){
+        if(!m_DCMTrajGenerator.generateDCMTrajectory(m_orderedSteps, firstStanceFoot, initDCMPosition, initDCMVelocity, m_phaseShift)){
+            std::cerr << "[FEETINTERPOLATOR] Failed while computing the DCM trajectories." << std::endl;
+            return false;
+        }
     }
-
+    else{
+        // in this case both the feet do not move. So the final DCM position is given by the position average of the left and right feet positions
+        // is equal to the initDCMPosition???
+        // i have to double check -> TODO
+        iDynTree::Vector2 finalDCMPosition;
+        iDynTree::toEigen(finalDCMPosition) = (iDynTree::toEigen(m_left.getSteps().front().position) + iDynTree::toEigen(m_right.getSteps().front().position)) / 2;
+        if(!m_DCMTrajGenerator.generateFixStanceDCMTrajectory(initDCMPosition, initDCMVelocity, finalDCMPosition, m_phaseShift)){
+            std::cerr << "[FEETINTERPOLATOR] Failed while computing the Stance DCM trajectories." << std::endl;
+            return false;
+        }
+    }
     return true;
 }
 
-
 const std::vector<iDynTree::Vector2>& FeetInterpolator::getDCMPosition() const
 {
-  return m_DCMTrajGenerator.getDCMPosition();
+    return m_DCMTrajGenerator.getDCMPosition();
 }
 
 const std::vector<iDynTree::Vector2>& FeetInterpolator::getDCMVelocity() const
 {
-  return m_DCMTrajGenerator.getDCMVelocity();
+    return m_DCMTrajGenerator.getDCMVelocity();
 }
-
 
 bool FeetInterpolator::interpolate(const FootPrint &left, const FootPrint &right, double initTime, double dT, const InitialState &weightInLeftAtMergePoint)
 {
