@@ -75,14 +75,13 @@ bool configurePlanner(UnicyclePlanner& planner, const Configuration &conf)
     ok = ok && planner.setControllerGain(conf.unicycleGain);
     ok = ok && planner.setMaximumIntegratorStepSize(conf.dT);
     ok = ok && planner.setMaxStepLength(conf.maxStepLength);
-    ok = ok && planner.setMinStepWidth(conf.minWidth);
     ok = ok && planner.setMaxAngleVariation(conf.maxAngleVariation);
     ok = ok && planner.setCostWeights(conf.positionWeight, conf.timeWeight);
     ok = ok && planner.setStepTimings(conf.minStepDuration, conf.maxStepDuration, conf.nominalDuration);
     ok = ok && planner.setPlannerPeriod(conf.dT);
     ok = ok && planner.setMinimumAngleForNewSteps(conf.minAngleVariation);
     ok = ok && planner.setMinimumStepLength(conf.minStepLength);
-    ok = ok && planner.setNominalWidth(conf.nominalWidth);
+    ok = ok && planner.setWidthSetting(conf.minWidth, conf.nominalWidth);
     planner.addTerminalStep(true);
     planner.startWithLeft(conf.swingLeft);
 
