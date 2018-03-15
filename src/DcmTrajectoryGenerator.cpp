@@ -382,7 +382,7 @@ bool DCMTrajectoryGenerator::addNewStep(const double &singleSupportStartTime,
         m_trajectory.push_back(newDoubleSupport);
 
         // add 1-th part of the Double Support phase
-        newDoubleSupport = std::make_shared<DoubleSupportTrajectory>(doubleSupportFinalBoundaryCondition,
+        newDoubleSupport = std::make_shared<DoubleSupportTrajectory>(doubleSupportInitBoundaryCondition,
                                                                      doubleSupportStanceInitBoundaryCondition);
         m_trajectory.push_back(newDoubleSupport);
     }else{
