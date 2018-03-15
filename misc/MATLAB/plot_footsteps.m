@@ -21,7 +21,7 @@ posLeft = [xL, yL]';
 posRight = [xR, yR]';
 
 %% PLOT FOOTPATHS
-for i = 1:length(posLeft)
+for i = 1:size(posLeft,2)
     % plot left footpath
     left_foot_transform = hgtransform;
     left_foot_transform.Matrix = makehgtform('translate', [posLeft(:,i);0],...
@@ -29,7 +29,7 @@ for i = 1:length(posLeft)
     patch('XData',x,'YData',y,'FaceColor','green','FaceAlpha',alpha,'Parent',left_foot_transform);
 end
 
-for i = 1:length(posRight)
+for i = 1:size(posRight,2)
     % plot right footpath
     right_foot_transform = hgtransform;
     right_foot_transform.Matrix = makehgtform('translate', [posRight(:,i);0],...

@@ -18,21 +18,21 @@ clear all; clc;
 % Add first run
 left1 = importdata('footstepsL1.txt');
 right1 = importdata('footstepsR1.txt');
-dcmPos1 = importdata('dcmPos1.txt');
+dcmPos1 = importdata('DCMPos1.txt');
 mergePoints1 = importdata('mergePoints1.txt');
 alpha1 = 0.3;
 
 % Add second run
 left2 = importdata('footstepsL2.txt');
 right2 = importdata('footstepsR2.txt');
-dcmPos2 = importdata('dcmPos2.txt');
+dcmPos2 = importdata('DCMPos2.txt');
 mergePoints2 = importdata('mergePoints2.txt');
 alpha2 = 0.6;
 
 % Add third run
 left3 = importdata('footstepsL3.txt');
 right3 = importdata('footstepsR3.txt');
-dcmPos3 = importdata('dcmPos3.txt');
+dcmPos3 = importdata('DCMPos3.txt');
 mergePoints3 = importdata('mergePoints3.txt');
 alpha3 = 1;
 
