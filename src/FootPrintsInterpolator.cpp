@@ -922,9 +922,8 @@ bool FeetInterpolator::interpolate(const FootPrint &left, const FootPrint &right
     return true;
 }
 
-
 bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT,
-                                      const DCMInitialState& DCMBoundaryConditionAtMergePoint, const Step &previousLeft, const Step &previousRight)
+                                      const DCMInitialState& DCMBoundaryConditionAtMergePoint)
 {
     if (left.numberOfSteps() < 1){
         std::cerr << "[FEETINTERPOLATOR] No steps in the left pointer." << std::endl;
@@ -1045,11 +1044,6 @@ bool FeetInterpolator::interpolate(const FootPrint &left, const FootPrint &right
     alpha0.initialAcceleration = 0.0;
 
     return interpolate(left, right, initTime, dT, alpha0);
-}
-
-bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT, const DCMInitialState &DCMBoundaryConditionAtMergePoint)
-{
-  return interpolateDCM(left, right, initTime, dT, DCMBoundaryConditionAtMergePoint, left.getSteps().front(), right.getSteps().front());
 }
 
 bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT)

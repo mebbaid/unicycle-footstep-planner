@@ -115,12 +115,30 @@ class FeetInterpolator {
 
     bool interpolate(const FootPrint &left, const FootPrint &right, double initTime, double dT);
 
-    bool interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT,
-                        const DCMInitialState &DCMBoundaryConditionAtMergePoint, const Step &previousLeft, const Step &previousRight);
-
-    bool interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT, const DCMInitialState &DCMBoundaryConditionAtMergePoint);
-
+    /**
+     * Generete a DCM trajectory.
+     * @note please call the
+     * `interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT, const DCMInitialState &DCMBoundaryConditionAtMergePoint);`
+     * if you want to set a desired boundary condition.
+     * @param left is a vector containing all the left footprints;
+     * @param right is a vector containing all the left footprints;
+     * @param initTime is the trajectory initial time;
+     * @param dT sampling time;
+     * @return true/false in case of success/failure.
+     */
     bool interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT);
+
+    /**
+     * Generete a DCM trajectory.
+     * @param left is a vector containing all the left footprints;
+     * @param right is a vector containing all the left footprints;
+     * @param initTime is the trajectory initial time;
+     * @param dT sampling time;
+     * @param DCMBoundaryConditionAtMergePoint desired position and velocity of the dcm at the beginning of the trajectory (merge point).
+     * @return true/false in case of success/failure.
+     */
+    bool interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT,
+                        const DCMInitialState &DCMBoundaryConditionAtMergePoint);
 
     //Settings
 
@@ -177,8 +195,16 @@ class FeetInterpolator {
 
     void getMergePoints(std::vector<size_t>& mergePoints) const; //indexes in which is suitable to perform a merge of trajectories. The weight percentage is discontinuos in velocity
 
-
+    /**
+     * Get the position of the DCM along the entire trajectory.
+     * @return a vector containing the position of the DCM
+     */
     const std::vector<iDynTree::Vector2>& getDCMPosition() const;
+
+    /**
+     * Get the velocity of the DCM along the entire trajectory.
+     * @return a vector containing the velocity of the DCM
+     */
     const std::vector<iDynTree::Vector2>& getDCMVelocity() const;
 
 };
