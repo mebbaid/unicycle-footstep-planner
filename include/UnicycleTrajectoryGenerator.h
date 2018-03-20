@@ -43,15 +43,81 @@ public:
                     const iDynTree::Vector2 &measuredLeftPosition, double measuredLeftAngle,
                     const iDynTree::Vector2 &measuredRightPosition, double measuredRightAngle);
 
+
+    /**
+     * Generate a new trajectory. (With this method the ZMP trahectory is not evaluated).
+     * @param initTime initial time of the trajectory;
+     * @param dT sampling time;
+     * @param endTime final time of the trajectory.
+     * @return true/false in case of success/failure
+     */
     bool generateAndInterpolateDCM(double initTime, double dT, double endTime);
 
-    bool generateAndInterpolateDcm(std::shared_ptr<FootPrint> leftFoot, std::shared_ptr<FootPrint> rightFoot, double initTime, double dT, double endTime);
+    /**
+     * Generate a new trajectory. (With this method the ZMP trahectory is not evaluated).
+     * @param leftFoot pointer of the left footsteps (it will be filled by this method);
+     * @param rightFoot pointer of the right footsteps (it will be filled by this method);
+     * @param initTime initial time of the trajectory;
+     * @param dT sampling time;
+     * @param endTime final time of the trajectory.
+     * @return true/false in case of success/failure
+     */
+    bool generateAndInterpolateDCM(std::shared_ptr<FootPrint> leftFoot, std::shared_ptr<FootPrint> rightFoot,
+                                   double initTime, double dT, double endTime);
 
-    bool reGenerateDcm(double initTime, double dT, double endTime, const DcmInitialState &dcmBoundaryConditionAtMergePoint);
+    /**
+     * Re-generate a new trajectory. (With this method the ZMP trahectory is not evaluated).
+     * This method can be called only if the `generateAndInterpolateDCM()` was already called.
+     * @param initTime initial time of the trajectory;
+     * @param dT sampling time;
+     * @param endTime final time of the trajectory;
+     * @param DCMBoundaryConditionAtMergePoint desired position and velocity at the beginning of the trajectory.
+     * @return true/false in case of success/failure
+     */
+    bool reGenerateDCM(double initTime, double dT, double endTime,
+                       const DCMInitialState &DCMBoundaryConditionAtMergePoint);
 
-    bool generateAndInterpolateDCM(std::shared_ptr<FootPrint> leftFoot, std::shared_ptr<FootPrint> rightFoot, double initTime, double dT, double endTime);
+    /**
+     * Re-generate a new trajectory. (With this method the ZMP trahectory is not evaluated).
+     * This method can be called only if the `generateAndInterpolateDCM()` was already called.
+     * With this function you can evaluate a new trajectory from the real position of the left and right feet.
+     * @param initTime initial time of the trajectory;
+     * @param dT sampling time;
+     * @param endTime final time of the trajectory;
+     * @param DCMBoundaryConditionAtMergePointPosition desired position at the beginning of the trajectory;
+     * @param DCMBoundaryConditionAtMergePointVelocity desired velocity at the beginning of the trajectory;
+     * @param measuredLeftPosition real position of the left foot;
+     * @param measuredLeftAngle real attitude of the left foot;
+     * @param measuredRightPosition real position of the right foot;
+     * @param measuredRightAngle real attitude of the right foot;
+     * @return true/false in case of success/failure
+     */
+    bool reGenerateDCM(double initTime, double dT, double endTime,
+                       const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointPosition,
+                       const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointVelocity,
+                       const iDynTree::Vector2 &measuredLeftPosition, double measuredLeftAngle,
+                       const iDynTree::Vector2 &measuredRightPosition, double measuredRightAngle);
 
-    bool reGenerateDCM(double initTime, double dT, double endTime, const DCMInitialState &DCMBoundaryConditionAtMergePoint);
+    /**
+     * Re-generate a new trajectory. (With this method the ZMP trahectory is not evaluated).
+     * This method can be called only if the `generateAndInterpolateDCM()` was already called.
+     * With this function you can evaluate a new trajectory from the real position of the left or right feet.
+     * @param initTime initial time of the trajectory;
+     * @param dT sampling time;
+     * @param endTime final time of the trajectory;
+     * @param DCMBoundaryConditionAtMergePointPosition desired position at the beginning of the trajectory;
+     * @param DCMBoundaryConditionAtMergePointVelocity desired velocity at the beginning of the trajectory;
+     * @param correctLeft boolean used to understand if the left or the right foot has to be corrected
+     * if it is true the left foot will be corrected (i.e. the left foot is the stance foot);
+     * @param measuredPosition real position of the foot (left if correctLeft is true);
+     * @param measuredAngle real attitude of the foot (left if correctLeft is true).
+     * @return true/false in case of success/failure.
+     */
+    bool reGenerateDCM(double initTime, double dT, double endTime,
+                       const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointPosition,
+                       const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointVelocity,
+                       bool correctLeft,
+                       const iDynTree::Vector2 &measuredPosition, double measuredAngle);
 };
 
 #endif // UNICYCLETRAJECTORYGENERATOR_H

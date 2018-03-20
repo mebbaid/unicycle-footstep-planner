@@ -1,8 +1,8 @@
-/*
+/**
  * Copyright (C) 2017 Fondazione Istituto Italiano di Tecnologia
  * Authors: Stefano Dafarra
+ *          Giulio Romualdi
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
- *
  */
 
 #include "UnicycleTrajectoryGenerator.h"
@@ -200,6 +200,124 @@ bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, doub
         return false;
     }
 
+    return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
+        interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
+}
+
+bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, double endTime,
+                                                const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointPosition,
+                                                const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointVelocity,
+                                                bool correctLeft,
+                                                const iDynTree::Vector2 &measuredPosition, double measuredAngle)
+{
+    // set the boundary conditions
+    DCMInitialState DCMBoundaryConditionAtMergePoint;
+    DCMBoundaryConditionAtMergePoint.initialPosition = DCMBoundaryConditionAtMergePointPosition;
+    DCMBoundaryConditionAtMergePoint.initialVelocity = DCMBoundaryConditionAtMergePointVelocity;
+
+    // get the right and the foot last steps before the initTime
+    Step previousL, previousR;
+    if (!m_left->keepOnlyPresentStep(initTime)){
+        std::cerr << "The initTime is not compatible with previous runs. Call a method generateAndInterpolate instead." << std::endl;
+        return false;
+    }
+
+    if (!m_right->keepOnlyPresentStep(initTime)){
+        std::cerr << "The initTime is not compatible with previous runs. Call a method generateAndInterpolate instead." << std::endl;
+        return false;
+    }
+
+    // get the last steps
+    m_left->getLastStep(previousL);
+    m_right->getLastStep(previousR);
+
+    Step measuredFoot;
+    measuredFoot.position = measuredPosition;
+    measuredFoot.angle = measuredAngle;
+
+    if(correctLeft){
+        // clear all the steps of the corrected foot
+        m_left->clearSteps();
+
+        // get the impact time
+        measuredFoot.impactTime = previousL.impactTime;
+
+        // add the steps
+        if (!m_left->addStep(measuredFoot)){
+            std::cerr << "The measuredLeft step is invalid." << std::endl;
+            return false;
+        }
+    }
+    else{
+        // clear all the steps of the corrected foot
+        m_right->clearSteps();
+
+        // get the impact time
+        measuredFoot.impactTime = previousR.impactTime;
+
+        // add the steps
+        if (!m_right->addStep(measuredFoot)){
+            std::cerr << "The measuredLeft step is invalid." << std::endl;
+            return false;
+        }
+    }
+
+    // evaluate the trajectory
+    return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
+        interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
+}
+
+bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, double endTime,
+                                                const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointPosition,
+                                                const iDynTree::Vector2 &DCMBoundaryConditionAtMergePointVelocity,
+                                                const iDynTree::Vector2 &measuredLeftPosition, double measuredLeftAngle,
+                                                const iDynTree::Vector2 &measuredRightPosition, double measuredRightAngle)
+{
+    // set the boundary conditions
+    DCMInitialState DCMBoundaryConditionAtMergePoint;
+    DCMBoundaryConditionAtMergePoint.initialPosition = DCMBoundaryConditionAtMergePointPosition;
+    DCMBoundaryConditionAtMergePoint.initialVelocity = DCMBoundaryConditionAtMergePointVelocity;
+
+    // get the right and the foot last steps before the initTime
+    Step previousL, previousR;
+    if (!m_left->keepOnlyPresentStep(initTime)){
+        std::cerr << "The initTime is not compatible with previous runs. Call a method generateAndInterpolate instead." << std::endl;
+        return false;
+    }
+
+    if (!m_right->keepOnlyPresentStep(initTime)){
+        std::cerr << "The initTime is not compatible with previous runs. Call a method generateAndInterpolate instead." << std::endl;
+        return false;
+    }
+    m_left->getLastStep(previousL);
+    m_right->getLastStep(previousR);
+
+    // clear all the trajectory
+    m_left->clearSteps();
+    m_right->clearSteps();
+
+    // the new initial steps are the measured steps
+    Step measuredLeft, measuredRight;
+    measuredLeft.impactTime = previousL.impactTime;
+    measuredLeft.position = measuredLeftPosition;
+    measuredLeft.angle = measuredLeftAngle;
+
+    measuredRight.impactTime = previousR.impactTime;
+    measuredRight.position = measuredRightPosition;
+    measuredRight.angle = measuredRightAngle;
+
+    // add the steps
+    if (!m_left->addStep(measuredLeft)){
+        std::cerr << "The measuredLeft step is invalid." << std::endl;
+        return false;
+    }
+
+    if (!m_right->addStep(measuredRight)){
+        std::cerr << "The measuredRight step is invalid." << std::endl;
+        return false;
+    }
+
+    // evaluate the trajectory
     return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
         interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
 }
