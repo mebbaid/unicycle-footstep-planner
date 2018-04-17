@@ -860,16 +860,6 @@ bool FeetInterpolator::interpolate(const FootPrint &left, const FootPrint &right
     m_dT = dT;
     m_initTime = initTime;
 
-    if (m_DCMTrajGenerator.setdT(m_dT)){
-        std::cerr << "[FEETINTERPOLATOR] Failed while the DCM trajectory generator period is setted." << std::endl;
-        return false;
-    }
-
-    if (m_DCMTrajGenerator.setOmega(m_omega)){
-        std::cerr << "[FEETINTERPOLATOR] Failed while the 3D-LIPM time constant is setted." << std::endl;
-        return false;
-    }
-
     if (!orderSteps()){
         std::cerr << "[FEETINTERPOLATOR] Failed while ordering the steps." << std::endl;
         return false;
@@ -960,8 +950,15 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     m_dT = dT;
     m_initTime = initTime;
 
-    m_DCMTrajGenerator.setdT(m_dT);
-    m_DCMTrajGenerator.setOmega(m_omega);
+    if (!m_DCMTrajGenerator.setdT(m_dT)){
+        std::cerr << "[FEETINTERPOLATOR] Failed while the DCM trajectory generator period is setted." << std::endl;
+        return false;
+    }
+
+    if (!m_DCMTrajGenerator.setOmega(m_omega)){
+        std::cerr << "[FEETINTERPOLATOR] Failed while the 3D-LIPM time constant is setted." << std::endl;
+        return false;
+    }
 
     if (!orderSteps()){
         std::cerr << "[FEETINTERPOLATOR] Failed while ordering the steps." << std::endl;
