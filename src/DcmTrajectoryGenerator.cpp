@@ -251,6 +251,11 @@ bool DCMTrajectoryGenerator::setdT(const double &dT)
     return true;
 }
 
+void DCMTrajectoryGenerator::setZMPDelta(const iDynTree::Vector2 &ZMPDelta)
+{
+    m_ZMPDelta = ZMPDelta;
+}
+
 bool DCMTrajectoryGenerator::addLastStep(const double &singleSupportStartTime,
                                          const double &singleSupportEndTime,
                                          const double &doubleSupportEndTime,
@@ -535,6 +540,9 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
     double doubleSupportEndTime;
     double singleSupportBoundaryConditionTime;
     DCMTrajectoryPoint singleSupportBoundaryCondition;
+    iDynTree::Vector2 lastZMP;
+    iDynTree::Vector2 comPosition;
+    double yawAngle;
 
     // evaluate times for the last step
     getLastStepsTiming(singleSupportStartTime,
@@ -542,18 +550,26 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
                        doubleSupportEndTime,
                        singleSupportBoundaryConditionTime);
 
-    iDynTree::Vector2 lastZMP = m_orderedSteps.back()->position;
+    // the ZMP is shifted before evaluate the DCM
+    yawAngle = m_orderedSteps.back()->angle;
+    lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
+    lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
     m_orderedSteps.pop_back();
 
     // evaluate the position of the Center of mass at the end of the trajectory
-    iDynTree::Vector2 comPosition;
-    iDynTree::toEigen(comPosition)  = (iDynTree::toEigen(lastZMP) + iDynTree::toEigen(m_orderedSteps.back()->position)) / 2;
+    iDynTree::Vector2 temp;
+    yawAngle = m_orderedSteps.back()->angle;
+    temp(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
+    temp(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
+    iDynTree::toEigen(comPosition)  = (iDynTree::toEigen(lastZMP) + iDynTree::toEigen(temp)) / 2;
 
     singleSupportBoundaryCondition.time = singleSupportBoundaryConditionTime;
     singleSupportBoundaryCondition.DCMPosition = comPosition;
     singleSupportBoundaryCondition.DCMVelocity.zero();
 
-    lastZMP = m_orderedSteps.back()->position;
+    yawAngle = m_orderedSteps.back()->angle;
+    lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
+    lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
     m_orderedSteps.pop_back();
 
     // evaluate the last step
@@ -567,7 +583,9 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
         getStepsTiming(singleSupportStartTime, singleSupportEndTime,
                        singleSupportBoundaryConditionTime);
 
-        lastZMP = m_orderedSteps.back()->position;
+        yawAngle = m_orderedSteps.back()->angle;
+        lastZMP(0) = m_orderedSteps.back()->position(0) + cos(yawAngle) * m_ZMPDelta(0) - sin(yawAngle) * m_ZMPDelta(1);
+        lastZMP(1) = m_orderedSteps.back()->position(1) + sin(yawAngle) * m_ZMPDelta(0) + cos(yawAngle) * m_ZMPDelta(1);
         m_orderedSteps.pop_back();
 
         // get the next Single Support trajectory

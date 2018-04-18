@@ -30,6 +30,7 @@ typedef struct
     // Unicycle quantities
     double unicycleGain = 10.0, referencePointDistanceX = 0.1, referencePointDistanceY = 0;
     double timeWeight = 2.5, positionWeight = 1;
+    double ZMPDeltaX = 0, ZMPDeltaY = 0;
 
     // Bounds
     // Step length
@@ -96,11 +97,17 @@ bool configureInterpolator(FeetInterpolator& interpolator, const Configuration &
 {
     bool ok = true;
 
+    iDynTree::Vector2 ZMPDelta;
+
     ok = ok && interpolator.setSwitchOverSwingRatio(conf.switchOverSwingRatio);
     ok = ok && interpolator.setTerminalHalfSwitchTime(conf.lastStepSwitchTime);
     ok = ok && interpolator.setStepHeight(conf.stepHeight);
     ok = ok && interpolator.setPauseConditions(conf.maxStepDuration, conf.nominalDuration);
     ok = ok && interpolator.setCoMHeightSettings(conf.comHeight, conf.comHeightDelta);
+
+    ZMPDelta(0) = conf.ZMPDeltaX;
+    ZMPDelta(1) = conf.ZMPDeltaY;
+    interpolator.setZMPDelta(ZMPDelta);
 
     // REMOVE ME
     iDynTree::Vector2 leftZMPstance, rightZMPstance;

@@ -945,20 +945,23 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     m_nominalSwitchTime = m_switchPercentage * m_nominalStepTime;
     m_nominalSwingTime = m_nominalStepTime - m_nominalSwitchTime;
 
+    // todo
     m_left = left;
     m_right = right;
     m_dT = dT;
     m_initTime = initTime;
 
     if (!m_DCMTrajGenerator.setdT(m_dT)){
-        std::cerr << "[FEETINTERPOLATOR] Failed while the DCM trajectory generator period is setted." << std::endl;
+        std::cerr << "[FEETINTERPOLATOR] Failed while the DCM trajectory generator period is set." << std::endl;
         return false;
     }
 
     if (!m_DCMTrajGenerator.setOmega(m_omega)){
-        std::cerr << "[FEETINTERPOLATOR] Failed while the 3D-LIPM time constant is setted." << std::endl;
+        std::cerr << "[FEETINTERPOLATOR] Failed while the 3D-LIPM time constant is set." << std::endl;
         return false;
     }
+
+    m_DCMTrajGenerator.setZMPDelta(m_ZMPDelta);
 
     if (!orderSteps()){
         std::cerr << "[FEETINTERPOLATOR] Failed while ordering the steps." << std::endl;
@@ -1006,10 +1009,9 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     }
     else{
         // in this case both the feet do not move. So the final DCM position is given by the position average of the left and right feet positions
-        // is equal to the initDCMPosition???
-        // i have to double check -> TODO
-        iDynTree::Vector2 finalDCMPosition;
-        iDynTree::toEigen(finalDCMPosition) = (iDynTree::toEigen(m_left.getSteps().front().position) + iDynTree::toEigen(m_right.getSteps().front().position)) / 2;
+        // is equal to the initDCMPosition
+        iDynTree::Vector2 finalDCMPosition = initDCMPosition;
+
         if(!m_DCMTrajGenerator.generateFixStanceDCMTrajectory(initDCMPosition, initDCMVelocity, finalDCMPosition, m_phaseShift)){
             std::cerr << "[FEETINTERPOLATOR] Failed while computing the Stance DCM trajectories." << std::endl;
             return false;
@@ -1046,14 +1048,21 @@ bool FeetInterpolator::interpolate(const FootPrint &left, const FootPrint &right
 bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &right, double initTime, double dT)
 {
     DCMInitialState DCMBoundaryConditionAtMergePoint;
-    iDynTree::Vector2 leftFootPosition = left.getSteps().front().position;
-    iDynTree::Vector2 rightFootPosition = right.getSteps().front().position;
+
+    iDynTree::Vector2 leftFootPosition, rightFootPosition;
+
+    // the desired position of the DCM can be shifted on x and y position
+    // note that this method is called only for the first steps in this particular case the
+    // rotation matrix between the world frame and booth feet frames is the identity
+    iDynTree::toEigen(leftFootPosition) = iDynTree::toEigen(left.getSteps().front().position) + iDynTree::toEigen(m_ZMPDelta);
+    iDynTree::toEigen(rightFootPosition) = iDynTree::toEigen(right.getSteps().front().position) + iDynTree::toEigen(m_ZMPDelta);
+
     iDynTree::toEigen(DCMBoundaryConditionAtMergePoint.initialPosition) = (iDynTree::toEigen(leftFootPosition) + iDynTree::toEigen(rightFootPosition)) / 2;
+
     DCMBoundaryConditionAtMergePoint.initialVelocity.zero();
 
     return interpolateDCM(left, right, initTime, dT, DCMBoundaryConditionAtMergePoint);
 }
-
 
 bool FeetInterpolator::setSwitchOverSwingRatio(double ratio)
 {
@@ -1167,6 +1176,11 @@ bool FeetInterpolator::setCoMHeightSettings(double comHeight, double comHeightSt
     m_omega = sqrt(9.81/m_CoMHeight);
 
     return true;
+}
+
+void FeetInterpolator::setZMPDelta(const iDynTree::Vector2 &ZMPDelta)
+{
+    m_ZMPDelta = ZMPDelta;
 }
 
 void FeetInterpolator::getFeetTrajectories(std::vector<iDynTree::Transform> &lFootTrajectory, std::vector<iDynTree::Transform> &rFootTrajectory) const
