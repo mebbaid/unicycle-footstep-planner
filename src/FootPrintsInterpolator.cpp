@@ -945,7 +945,6 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     m_nominalSwitchTime = m_switchPercentage * m_nominalStepTime;
     m_nominalSwingTime = m_nominalStepTime - m_nominalSwitchTime;
 
-    // todo
     m_left = left;
     m_right = right;
     m_dT = dT;
@@ -992,16 +991,21 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     }
 
     // generate DCM trajectory
-    StepList::const_iterator firstStanceFoot, firstSwingFoot;
-    firstStanceFoot = (m_left.getSteps()[1].impactTime > m_right.getSteps()[1].impactTime) ? m_left.getSteps().cbegin() : m_right.getSteps().cbegin();
-    firstSwingFoot = (m_left.getSteps()[1].impactTime > m_right.getSteps()[1].impactTime) ? m_right.getSteps().cbegin() : m_left.getSteps().cbegin();
-
     iDynTree::Vector2 initDCMPosition, initDCMVelocity;
 
     initDCMPosition = DCMBoundaryConditionAtMergePoint.initialPosition;
     initDCMVelocity = DCMBoundaryConditionAtMergePoint.initialVelocity;
 
     if(m_orderedSteps.size() != 0){
+        StepList::const_iterator firstStanceFoot;
+        // during the first step both the left and the right feet impact time are equal to 0 therefore the next footsteps are used to
+        // evaluate witch foot is the first stance foot
+        if(m_left.getSteps().begin()->impactTime == 0 && m_right.getSteps().begin()->impactTime == 0){
+            firstStanceFoot = (m_left.getSteps()[1].impactTime > m_right.getSteps()[1].impactTime) ? m_left.getSteps().cbegin() : m_right.getSteps().cbegin();
+        }
+        else{
+            firstStanceFoot = (m_left.getSteps().begin()->impactTime > m_right.getSteps().begin()->impactTime) ? m_left.getSteps().cbegin() : m_right.getSteps().cbegin();
+        }
         if(!m_DCMTrajGenerator.generateDCMTrajectory(m_orderedSteps, firstStanceFoot, initDCMPosition, initDCMVelocity, m_phaseShift)){
             std::cerr << "[FEETINTERPOLATOR] Failed while computing the DCM trajectories." << std::endl;
             return false;
@@ -1009,8 +1013,18 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     }
     else{
         // in this case both the feet do not move. So the final DCM position is given by the position average of the left and right feet positions
-        // is equal to the initDCMPosition
-        iDynTree::Vector2 finalDCMPosition = initDCMPosition;
+        iDynTree::Vector2 finalDCMPosition;
+        iDynTree::Vector2 leftFootPosition, rightFootPosition;
+
+        double leftYawAngle = left.getSteps().front().angle;
+        leftFootPosition(0) = left.getSteps().front().position(0) + cos(leftYawAngle) * m_ZMPDelta(0) - sin(leftYawAngle) * m_ZMPDelta(1);
+        leftFootPosition(1) = left.getSteps().front().position(1) + sin(leftYawAngle) * m_ZMPDelta(0) + cos(leftYawAngle) * m_ZMPDelta(1);
+
+        double rightYawAngle = right.getSteps().front().angle;
+        rightFootPosition(0) = right.getSteps().front().position(0) + cos(rightYawAngle) * m_ZMPDelta(0) - sin(rightYawAngle) * m_ZMPDelta(1);
+        rightFootPosition(1) = right.getSteps().front().position(1) + sin(rightYawAngle) * m_ZMPDelta(0) + cos(rightYawAngle) * m_ZMPDelta(1);
+
+        iDynTree::toEigen(finalDCMPosition) = (iDynTree::toEigen(leftFootPosition) + iDynTree::toEigen(rightFootPosition)) / 2;
 
         if(!m_DCMTrajGenerator.generateFixStanceDCMTrajectory(initDCMPosition, initDCMVelocity, finalDCMPosition, m_phaseShift)){
             std::cerr << "[FEETINTERPOLATOR] Failed while computing the Stance DCM trajectories." << std::endl;
