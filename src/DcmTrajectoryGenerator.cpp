@@ -626,11 +626,7 @@ bool DCMTrajectoryGenerator::generateDCMTrajectory(const std::vector<StepList::c
 
 bool DCMTrajectoryGenerator::evaluateDCMTrajectory()
 {
-    size_t timeVectorLength = std::get<1>(m_trajectoryDomain) - std::get<0>(m_trajectoryDomain);
-    std::vector<size_t> timeVector(timeVectorLength);
-
-    // populate the time vector
-    std::iota(std::begin(timeVector), std::end(timeVector), std::get<0>(m_trajectoryDomain));
+    size_t timeVectorLength = std::get<1>(m_trajectoryDomain) - std::get<0>(m_trajectoryDomain) + 1;
 
     // clear all the previous DCM position
     m_DCMPosition.clear();
@@ -644,8 +640,8 @@ bool DCMTrajectoryGenerator::evaluateDCMTrajectory()
     double time;
     std::vector<std::shared_ptr<GeneralSupportTrajectory>>::reverse_iterator subTrajectory = m_trajectory.rbegin();
 
-    for (size_t t : timeVector){
-        time = t * m_dT;
+    for (size_t t = 0; t < timeVectorLength; t++){
+        time = (t + std::get<0>(m_trajectoryDomain)) * m_dT;
         double subTrajectoryEndTime  = std::get<1>((*subTrajectory)->getTrajectoryDomain());
         if (time > subTrajectoryEndTime){
             subTrajectory++;

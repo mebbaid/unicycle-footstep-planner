@@ -135,10 +135,10 @@ bool FeetInterpolator::createPhasesTimings(const double velocityAtMergePoint)
             //bool pause = m_pauseActive && (switchTime > m_maxSwitchTime); //if true, it will pause in the middle
             size_t mergePoint;
             if (pause){
-                mergePoint = m_phaseShift.back() - std::round(m_nominalSwitchTime/(2*m_dT));
+                mergePoint = m_phaseShift.back() - std::round(m_nominalSwitchTime * (1 - m_mergePointRatio)/(m_dT));
                 m_mergePoints.push_back(mergePoint);
             } else {
-                mergePoint = m_phaseShift.back() - std::round(switchTime/(2*m_dT));
+                mergePoint = m_phaseShift.back() - std::round(switchTime * (1 - m_mergePointRatio)/(m_dT));
                 m_mergePoints.push_back(mergePoint);
             }
         }
@@ -805,6 +805,7 @@ FeetInterpolator::FeetInterpolator()
     ,m_initTime(0.0)
     ,m_stepHeight(-1)
     ,m_swingApex(0.5)
+    ,m_mergePointRatio(0.5)
     ,m_landingVelocity(0.0)
     ,m_pauseActive(false)
     ,m_CoMHeight(-1.0)
@@ -1189,6 +1190,16 @@ bool FeetInterpolator::setCoMHeightSettings(double comHeight, double comHeightSt
 
     m_omega = sqrt(9.81/m_CoMHeight);
 
+    return true;
+}
+
+bool FeetInterpolator::setMergePointRatio(const double &mergePointRatio)
+{
+    if(mergePointRatio < 0 || mergePointRatio > 1){
+        std::cerr << "[FEETINTERPOLATOR] The merge point ratio has to be a positive number less the one";
+        return false;
+    }
+    m_mergePointRatio = mergePointRatio;
     return true;
 }
 

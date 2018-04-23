@@ -50,6 +50,11 @@ class FeetInterpolator {
     std::vector<InitialState> m_initStates;
     std::vector<bool> m_lFootContact, m_rFootContact, m_leftFixed;
 
+    // Useful to describe at which time of the double support phase a new trajectory should be attached.
+    // If it is equal to 0.5 the new trajectory will be attached to in the middle of the double support phase
+    // (default 0.5)
+    double m_mergePointRatio;
+
     //Feet Trajectory related variables
     double m_switchPercentage, m_dT, m_endSwitch, m_initTime, m_stepHeight, m_swingApex, m_landingVelocity;
     std::vector<iDynTree::Transform> m_leftTrajectory, m_rightTrajectory;
@@ -166,6 +171,16 @@ class FeetInterpolator {
      * @parm ZMPDelta is a vector containing the desired displacement of the ZMP w.r.t. the center of the foot expressed in the foot frame.
      */
     void setZMPDelta(const iDynTree::Vector2 &ZMPDelta);
+
+    /**
+     * Set the relative position of the merge point inside the double support phase.
+     * If it is equal to 0 the merge point is placed at the beginning of the DS phase;
+     * If it is equal to 0.5 the merge point is placed in the middle of the DS phase;
+     * If it is equal to 1 the merge point is placed at the end of the DS phase.
+     * @param mergePointRatio relative position of the merge point inside the double support phase
+     * @return true/false in case of success/failure
+     */
+    bool setMergePointRatio(const double &mergePointRatio);
 
     //Getters
 
