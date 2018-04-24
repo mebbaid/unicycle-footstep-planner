@@ -5,6 +5,7 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  */
 
+#include <iDynTree/Core/EigenHelpers.h>
 #include "UnicycleTrajectoryGenerator.h"
 
 bool UnicycleTrajectoryGenerator::clearAndAddMeasuredStep(std::shared_ptr<FootPrint> foot, Step &previousStep, const iDynTree::Vector2 &measuredPosition, double measuredAngle)
@@ -262,9 +263,46 @@ bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, doub
         }
     }
 
+    bool ok = true;
+    ok = ok && setEndTime(endTime);
+    ok = ok && computeNewSteps(m_left, m_right, initTime);
+
+    // if the following it is true the robot should stop.
+    if(m_left->numberOfSteps() + m_right->numberOfSteps() == 3)
+    {
+        // find the swing foot
+        auto swingFoot = m_left->numberOfSteps() == 2 ? m_left : m_right;
+        StepList stepList = swingFoot->getSteps();
+
+        // get the last footprint of the swing foot
+        Step lastStep;
+        if(!swingFoot->getLastStep(lastStep)){
+            std::cerr << "Unable to get the last step." << std::endl;
+            return false;
+        }
+
+        iDynTree::Vector2 displacement;
+        iDynTree::toEigen(displacement) = iDynTree::toEigen(stepList.back().position) - iDynTree::toEigen(stepList.front().position);
+
+        // the last footstep is removed
+        if(!swingFoot->removeLastStep()){
+            std::cerr << "Unable to remove the last step." << std::endl;
+            return false;
+        }
+
+        // the new footprint will have the same impact time and angle of the previous one while it is shifted forward
+        iDynTree::toEigen(lastStep.position) = iDynTree::toEigen(lastStep.position) + iDynTree::toEigen(displacement);
+        if(!swingFoot->addStep(lastStep)){
+            std::cerr << "Unable to add a new step." << std::endl;
+            return false;
+        }
+    }
+
+    ok = ok && interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
+
     // evaluate the trajectory
-    return setEndTime(endTime) && computeNewSteps(m_left, m_right, initTime) &&
-        interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
+    return ok;
+
 }
 
 bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, double endTime,
