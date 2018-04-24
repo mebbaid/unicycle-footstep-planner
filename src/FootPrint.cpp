@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2017 Fondazione Istituto Italiano di Tecnologia
  * Authors: Stefano Dafarra
+ *          Giulio Romualdi
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
@@ -18,6 +19,21 @@ FootPrint::FootPrint(std::shared_ptr<StepList> &steps)
 {
     m_steps = steps;
     std::sort(m_steps->begin(), m_steps->end(), [](const Step&a, const Step&b) { return a.impactTime < b.impactTime;});
+}
+
+bool FootPrint::removeLastStep()
+{
+    if (!m_steps){
+        std::cerr << "Empty step pointer." <<std::endl;
+        return false;
+    }
+
+    if(numberOfSteps() < 1){
+        std::cerr << "The step list is empty." <<std::endl;
+        return false;
+    }
+    m_steps->pop_back();
+    return true;
 }
 
 bool FootPrint::addStep(const iDynTree::Vector2 &position, double theta, double impactTime)

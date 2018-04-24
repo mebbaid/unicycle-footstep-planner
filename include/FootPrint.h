@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2017 Fondazione Istituto Italiano di Tecnologia
  * Authors: Stefano Dafarra
+ *          Giulio Romualdi
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
@@ -42,6 +43,8 @@ public:
     void clearSteps();
 
     void clearLastStep();
+
+    bool removeLastStep();
 
     size_t numberOfSteps() const;
 
