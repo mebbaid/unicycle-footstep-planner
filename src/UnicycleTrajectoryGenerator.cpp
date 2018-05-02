@@ -217,7 +217,6 @@ bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, doub
     DCMBoundaryConditionAtMergePoint.initialVelocity = DCMBoundaryConditionAtMergePointVelocity;
 
     // get the right and the foot last steps before the initTime
-    Step previousL, previousR;
     if (!m_left->keepOnlyPresentStep(initTime)){
         std::cerr << "The initTime is not compatible with previous runs. Call a method generateAndInterpolate instead." << std::endl;
         return false;
@@ -228,36 +227,46 @@ bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, doub
         return false;
     }
 
-    // get the last steps
-    m_left->getLastStep(previousL);
-    m_right->getLastStep(previousR);
-
-    Step measuredFoot;
-    measuredFoot.position = measuredPosition;
-    measuredFoot.angle = measuredAngle;
+    Step correctedStep;
+    correctedStep.position = measuredPosition;
 
     if(correctLeft){
+        Step previousL;
+        m_left->getLastStep(previousL);
         // clear all the steps of the corrected foot
         m_left->clearSteps();
 
         // get the impact time
-        measuredFoot.impactTime = previousL.impactTime;
+        correctedStep.impactTime = previousL.impactTime;
+
+        // wrap the angle
+        iDynTree::Rotation initialRotation = iDynTree::Rotation::RotZ(previousL.angle);
+        iDynTree::Rotation measuredRotation = iDynTree::Rotation::RotZ(measuredAngle);
+        correctedStep.angle = previousL.angle + (initialRotation.inverse() * measuredRotation).asRPY()(2);
 
         // add the steps
-        if (!m_left->addStep(measuredFoot)){
+        if (!m_left->addStep(correctedStep)){
             std::cerr << "The measuredLeft step is invalid." << std::endl;
             return false;
         }
     }
     else{
+        Step previousR;
+        m_right->getLastStep(previousR);
+
         // clear all the steps of the corrected foot
         m_right->clearSteps();
 
         // get the impact time
-        measuredFoot.impactTime = previousR.impactTime;
+        correctedStep.impactTime = previousR.impactTime;
+
+        // wrap the angle
+        iDynTree::Rotation initialRotation = iDynTree::Rotation::RotZ(previousR.angle);
+        iDynTree::Rotation measuredRotation = iDynTree::Rotation::RotZ(measuredAngle);
+        correctedStep.angle = previousR.angle +  (initialRotation.inverse() * measuredRotation).asRPY()(2);
 
         // add the steps
-        if (!m_right->addStep(measuredFoot)){
+        if (!m_right->addStep(correctedStep)){
             std::cerr << "The measuredLeft step is invalid." << std::endl;
             return false;
         }
@@ -268,35 +277,51 @@ bool UnicycleTrajectoryGenerator::reGenerateDCM(double initTime, double dT, doub
     ok = ok && computeNewSteps(m_left, m_right, initTime);
 
     // if the following it is true the robot should stop.
-    if(m_left->numberOfSteps() + m_right->numberOfSteps() == 3)
-    {
-        // find the swing foot
-        auto swingFoot = m_left->numberOfSteps() == 2 ? m_left : m_right;
-        StepList stepList = swingFoot->getSteps();
+    // if(m_left->numberOfSteps() + m_right->numberOfSteps() == 3)
+    // {
+    //     // find the swing foot
+    //     auto swingFoot = m_left->numberOfSteps() == 2 ? m_left : m_right;
+    //     auto stanceFoot = m_left->numberOfSteps() != 2 ? m_left : m_right;
+    //     StepList stepList = swingFoot->getSteps();
 
-        // get the last footprint of the swing foot
-        Step lastStep;
-        if(!swingFoot->getLastStep(lastStep)){
-            std::cerr << "Unable to get the last step." << std::endl;
-            return false;
-        }
+    //     // get the last footprint of the swing foot
+    //     Step lastStep;
+    //     if(!swingFoot->getLastStep(lastStep)){
+    //         std::cerr << "Unable to get the last step." << std::endl;
+    //         return false;
+    //     }
 
-        iDynTree::Vector2 displacement;
-        iDynTree::toEigen(displacement) = iDynTree::toEigen(stepList.back().position) - iDynTree::toEigen(stepList.front().position);
+    //     iDynTree::Vector2 displacement;
+    //     iDynTree::toEigen(displacement) = iDynTree::toEigen(stepList.back().position) - iDynTree::toEigen(stepList.front().position);
 
-        // the last footstep is removed
-        if(!swingFoot->removeLastStep()){
-            std::cerr << "Unable to remove the last step." << std::endl;
-            return false;
-        }
+    //     // the last footstep is removed
+    //     if(!swingFoot->removeLastStep()){
+    //         std::cerr << "Unable to remove the last step." << std::endl;
+    //         return false;
+    //     }
 
-        // the new footprint will have the same impact time and angle of the previous one while it is shifted forward
-        iDynTree::toEigen(lastStep.position) = iDynTree::toEigen(lastStep.position) + iDynTree::toEigen(displacement);
-        if(!swingFoot->addStep(lastStep)){
-            std::cerr << "Unable to add a new step." << std::endl;
-            return false;
-        }
-    }
+    //     // the new footprint will have the same impact time and angle of the previous one while it is shifted forward
+    //     double duration = stepList.back().impactTime  - stepList.front().impactTime;
+    //     iDynTree::toEigen(lastStep.position) = iDynTree::toEigen(lastStep.position) + iDynTree::toEigen(displacement);
+    //     // lastStep.impactTime = stanceFoot->getSteps().front().impactTime  + duration;
+    //     if(!swingFoot->addStep(lastStep)){
+    //         std::cerr << "Unable to add a new step." << std::endl;
+    //         return false;
+    //     }
+
+    //     double impactTime = lastStep.impactTime;
+    //     if(!stanceFoot->getLastStep(lastStep)){
+    //         std::cerr << "Unable to get the last step." << std::endl;
+    //         return false;
+    //     }
+    //     iDynTree::toEigen(lastStep.position) = iDynTree::toEigen(lastStep.position) + iDynTree::toEigen(displacement);
+    //     lastStep.impactTime = impactTime  + duration;
+    //     if(!stanceFoot->addStep(lastStep)){
+    //         std::cerr << "Unable to add a new step." << std::endl;
+    //         return false;
+    //     }
+
+    // }
 
     ok = ok && interpolateDCM(*m_left, *m_right, initTime, dT, DCMBoundaryConditionAtMergePoint);
 
