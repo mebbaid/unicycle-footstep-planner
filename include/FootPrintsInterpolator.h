@@ -108,6 +108,10 @@ class FeetInterpolator {
     void computeGlobalZMP(const Step &previousLeft, const Step &previousRight);
     bool computeCoMHeightTrajectory();
 
+    bool minimumJerk(const double &initialPoint,
+                     const double &finalPoint,
+                     const double &t,
+                     double &output);
 
  public:
     FeetInterpolator();

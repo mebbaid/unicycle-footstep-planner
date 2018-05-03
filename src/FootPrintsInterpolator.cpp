@@ -11,6 +11,25 @@
 #include <algorithm>
 #include <cmath>
 
+bool FeetInterpolator::minimumJerk(const double &initialPoint,
+                                   const double &finalPoint,
+                                   const double &t,
+                                   double &output)
+{
+    if((t < 0) || (t > 1)){
+        std::cerr << "[FEETINTERPOLATOR] The time has to be a positive number less than 1 "
+                  << " Remember to normalize the time."
+                  << std::endl;
+        return false;
+    }
+
+    double p = 6 * std::pow(t,5) - 15 * std::pow(t,4) + 10 * std::pow(t,3);
+    output = p * (finalPoint - initialPoint) + initialPoint;
+
+    return true;
+}
+
+
 bool FeetInterpolator::orderSteps()
 {
     m_orderedSteps.clear();
@@ -206,7 +225,7 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase, 
         output.resize(stepPhase.size());
 
     static iDynTree::VectorDynSize xPositionsBuffer(2), yPositionsBuffer(2), zPositionsBuffer(3), yawsBuffer(2), timesBuffer(2), zTimesBuffer(3);
-    static iDynTree::CubicSpline xSpline(2), ySpline(2), zSpline(3), yawSpline(2);
+    static iDynTree::CubicSpline yawSpline(2);
 
     const StepList& steps = foot.getSteps();
     StepList::const_iterator footState = steps.begin();
@@ -230,12 +249,11 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase, 
 
             xPositionsBuffer(0) = footState->position(0);
             yPositionsBuffer(0) = footState->position(1);
+            zPositionsBuffer(0) = 0;
             yawsBuffer(0) = footState->angle;
             timesBuffer(0) = 0.0;
-            zPositionsBuffer(0) = 0.0;
-             zTimesBuffer(0) = 0.0;
-            zPositionsBuffer(1) = m_stepHeight; //the z has an additional midpoint
-             zTimesBuffer(1) = m_swingApex*swingLength;
+
+            zPositionsBuffer(1) = m_stepHeight;
 
             if (footState + 1 == steps.cend()){
                 std::cerr << "[FEETINTERPOLATOR] Something went wrong. stepPhase and foot don't seem to be coherent." << std::endl;
@@ -245,47 +263,73 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase, 
 
             xPositionsBuffer(1) = footState->position(0);
             yPositionsBuffer(1) = footState->position(1);
+            zPositionsBuffer(2) = 0;
             yawsBuffer(1) = footState->angle;
             timesBuffer(1) = swingLength;
-            zPositionsBuffer(2) = 0.0;
-             zTimesBuffer(2) = swingLength;
 
-            //preparation for splines
-
-            xSpline.setInitialConditions(0.0, 0.0);
-            ySpline.setInitialConditions(0.0, 0.0);
-            zSpline.setInitialConditions(0.0, 0.0);
             yawSpline.setInitialConditions(0.0, 0.0);
-
-            xSpline.setFinalConditions(0.0, 0.0);
-            ySpline.setFinalConditions(0.0, 0.0);
-            zSpline.setFinalConditions(m_landingVelocity, 0.0); //we may think of non-null final acceleration for the z
             yawSpline.setFinalConditions(0.0, 0.0);
 
-            if (!xSpline.setData(timesBuffer, xPositionsBuffer)){
-                std::cerr << "[FEETINTERPOLATOR] Failed to initialize the x-dimension spline." << std::endl;
-                return false;
-            }
-            if (!ySpline.setData(timesBuffer, yPositionsBuffer)){
-                std::cerr << "[FEETINTERPOLATOR] Failed to initialize the y-dimension spline." << std::endl;
-                return false;
-            }
-            if (!zSpline.setData(zTimesBuffer, zPositionsBuffer)){
-                std::cerr << "[FEETINTERPOLATOR] Failed to initialize the z-dimension spline." << std::endl;
-                return false;
-            }
             if (!yawSpline.setData(timesBuffer, yawsBuffer)){
                 std::cerr << "[FEETINTERPOLATOR] Failed to initialize the yaw-dimension spline." << std::endl;
                 return false;
             }
 
+            double halfDuration = swingLength * m_swingApex;
             size_t startSwingInstant = instant;
             double interpolationTime;
+            double interpolationTime0 = (instant - startSwingInstant)*m_dT;
+            while (instant < std::round((endOfPhase - startSwingInstant) * m_swingApex) + startSwingInstant){
+                interpolationTime = (instant - startSwingInstant)*m_dT;
+
+                if(!minimumJerk(xPositionsBuffer(0), xPositionsBuffer(1), (interpolationTime - interpolationTime0)/swingLength, newPosition(0))){
+                    std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                    return false;
+                }
+
+                if(!minimumJerk(yPositionsBuffer(0), yPositionsBuffer(1), (interpolationTime - interpolationTime0)/swingLength, newPosition(1))){
+                    std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                    return false;
+                }
+
+                if(!minimumJerk(zPositionsBuffer(0), zPositionsBuffer(1), (interpolationTime - interpolationTime0)/halfDuration, newPosition(2))){
+                    std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                    return false;
+                }
+
+                newTransform.setPosition(newPosition);
+                newTransform.setRotation(iDynTree::Rotation::RPY(0.0, 0.0, yawSpline.evaluatePoint(interpolationTime)));
+
+                if (newPosition(2) < 0){
+                    std::cerr << "[FEETINTERPOLATOR] The z of the foot is negative at time " << instant*m_dT + m_initTime;
+                    std::cerr<<". Continuing anyway." <<std::endl;
+                }
+                output[instant] = newTransform;
+
+                ++instant;
+            }
+
+            halfDuration = swingLength * (1 - m_swingApex);
+
+            double interpolationTime1 = (instant - startSwingInstant)*m_dT;
             while (instant < endOfPhase){
                 interpolationTime = (instant - startSwingInstant)*m_dT;
-                newPosition(0) = xSpline.evaluatePoint(interpolationTime);
-                newPosition(1) = ySpline.evaluatePoint(interpolationTime);
-                newPosition(2) = zSpline.evaluatePoint(interpolationTime);
+
+                if(!minimumJerk(xPositionsBuffer(0), xPositionsBuffer(1), (interpolationTime - interpolationTime0)/swingLength, newPosition(0))){
+                    std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                    return false;
+                }
+
+                if(!minimumJerk(yPositionsBuffer(0), yPositionsBuffer(1), (interpolationTime - interpolationTime0)/swingLength, newPosition(1))){
+                    std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                    return false;
+                }
+
+                if(!minimumJerk(zPositionsBuffer(1), zPositionsBuffer(2), (interpolationTime - interpolationTime1)/halfDuration, newPosition(2))){
+                    std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                    return false;
+                }
+
                 newTransform.setPosition(newPosition);
                 newTransform.setRotation(iDynTree::Rotation::RPY(0.0, 0.0, yawSpline.evaluatePoint(interpolationTime)));
 
