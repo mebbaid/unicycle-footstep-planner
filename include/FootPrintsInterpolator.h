@@ -13,6 +13,7 @@
 #include "iDynTree/Core/VectorFixSize.h"
 #include "iDynTree/Core/VectorDynSize.h"
 #include "iDynTree/Core/Transform.h"
+#include "iDynTree/Core/Twist.h"
 #include "iDynTree/Core/CubicSpline.h"
 #include <memory>
 #include <vector>
@@ -58,6 +59,7 @@ class FeetInterpolator {
     //Feet Trajectory related variables
     double m_switchPercentage, m_dT, m_endSwitch, m_initTime, m_stepHeight, m_swingApex, m_landingVelocity;
     std::vector<iDynTree::Transform> m_leftTrajectory, m_rightTrajectory;
+    std::vector<iDynTree::Twist> m_leftTwist, m_rightTwist;
 
     //ZMP related variables
     iDynTree::Vector2 m_leftStanceZMP, m_leftSwitchZMP, m_rightStanceZMP, m_rightSwitchZMP;
@@ -90,7 +92,9 @@ class FeetInterpolator {
     bool createPhasesTimings(const double velocityAtMergePoint);
     void fillFeetStandingPeriodsVectors();
     void fillLeftFixedVector();
-    bool interpolateFoot(const std::vector<StepPhase> &stepPhase, const FootPrint &foot, std::vector<iDynTree::Transform> &output);
+    bool interpolateFoot(const std::vector<StepPhase> &stepPhase, const FootPrint &foot,
+                         std::vector<iDynTree::Transform> &positionOutput,
+                         std::vector<iDynTree::Twist> &velocityOutput);
     bool computeFootWeightPortion(const std::vector<StepPhase> &stepPhase, const InitialState &alpha0,
                                   std::vector<double> &output, std::vector<double> &outputVelocity,
                                   std::vector<double> &outputAcceleration); //the i-th element in output is in [0,1]
@@ -111,7 +115,8 @@ class FeetInterpolator {
     bool minimumJerk(const double &initialPoint,
                      const double &finalPoint,
                      const double &t,
-                     double &output);
+                     double &positionOutput,
+                     double &velocityOutput);
 
  public:
     FeetInterpolator();
@@ -189,6 +194,8 @@ class FeetInterpolator {
     //Getters
 
     void getFeetTrajectories(std::vector<iDynTree::Transform>& lFootTrajectory, std::vector<iDynTree::Transform>& rFootTrajectory) const;
+
+    void getFeetTwist(std::vector<iDynTree::Twist> &lFootTwist, std::vector<iDynTree::Twist> &rFootTwist) const;
 
     void getWeightPercentage(std::vector<double>& weightInLeft, std::vector<double>& weightInRight) const;
 
