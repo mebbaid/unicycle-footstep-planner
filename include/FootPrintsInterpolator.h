@@ -60,6 +60,7 @@ class FeetInterpolator {
     double m_switchPercentage, m_dT, m_endSwitch, m_initTime, m_stepHeight, m_swingApex, m_landingVelocity;
     std::vector<iDynTree::Transform> m_leftTrajectory, m_rightTrajectory;
     std::vector<iDynTree::Twist> m_leftTwist, m_rightTwist;
+    bool m_useMinimumJerkFootTrajectory;
 
     //ZMP related variables
     iDynTree::Vector2 m_leftStanceZMP, m_leftSwitchZMP, m_rightStanceZMP, m_rightSwitchZMP;
@@ -190,6 +191,13 @@ class FeetInterpolator {
      * @return true/false in case of success/failure
      */
     bool setMergePointRatio(const double &mergePointRatio);
+
+
+    /**
+     * Use the minimum jerk trajectory for feet interpolation.
+     * @param useMinimumJerk true if you want to use minimum jerk trajectory.
+     */
+    void useMinimumJerkFootTrajectory(const bool &useMinimumJerk);
 
     //Getters
 
