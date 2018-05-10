@@ -116,6 +116,7 @@ class FeetInterpolator {
     bool minimumJerk(const double &initialPoint,
                      const double &finalPoint,
                      const double &t,
+                     const double &trajectoryDuration,
                      double &positionOutput,
                      double &velocityOutput);
 
