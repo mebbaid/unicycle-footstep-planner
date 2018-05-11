@@ -322,7 +322,7 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase,
             size_t startSwingInstant = instant;
             double interpolationTime;
             double interpolationTime0 = (instant - startSwingInstant)*m_dT;
-            double dummy;
+            double dummy, yawAngle;
             while (instant < std::round((endOfPhase - startSwingInstant) * m_swingApex) + startSwingInstant){
                 interpolationTime = (instant - startSwingInstant)*m_dT;
 
@@ -330,6 +330,7 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase,
                     newPosition(0) = xSpline.evaluatePoint(interpolationTime, newTwist(0), dummy);
                     newPosition(1) = ySpline.evaluatePoint(interpolationTime, newTwist(1), dummy);
                     newPosition(2) = zSpline.evaluatePoint(interpolationTime, newTwist(2), dummy);
+                    yawAngle = yawSpline.evaluatePoint(interpolationTime, newTwist(5), dummy);
                 }
                 else{
                     if(!minimumJerk(xPositionsBuffer(0), xPositionsBuffer(1), (interpolationTime - interpolationTime0), swingLength, newPosition(0), newTwist(0))){
@@ -346,11 +347,13 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase,
                         std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
                         return false;
                     }
+
+                    if(!minimumJerk(yawsBuffer(0), yawsBuffer(1), (interpolationTime - interpolationTime0), swingLength, yawAngle, newTwist(5))){
+                        std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                        return false;
+                    }
                 }
                 newTransform.setPosition(newPosition);
-
-                double yawAngle, dummy;
-                yawAngle = yawSpline.evaluatePoint(interpolationTime, newTwist(5), dummy);
                 newTransform.setRotation(iDynTree::Rotation::RPY(0.0, 0.0, yawAngle));
 
                 if (newPosition(2) < 0){
@@ -369,15 +372,12 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase,
             while (instant < endOfPhase){
                 interpolationTime = (instant - startSwingInstant)*m_dT;
 
-                newPosition(0) = xSpline.evaluatePoint(interpolationTime, newTwist(0), dummy);
-                newPosition(1) = ySpline.evaluatePoint(interpolationTime, newTwist(1), dummy);
-                newPosition(2) = zSpline.evaluatePoint(interpolationTime, newTwist(2), dummy);
-
                 if(!m_useMinimumJerkFootTrajectory){
                     newPosition(0) = xSpline.evaluatePoint(interpolationTime, newTwist(0), dummy);
                     newPosition(1) = ySpline.evaluatePoint(interpolationTime, newTwist(1), dummy);
                     newPosition(2) = zSpline.evaluatePoint(interpolationTime, newTwist(2), dummy);
-                }
+                    yawAngle = yawSpline.evaluatePoint(interpolationTime, newTwist(5), dummy);
+               }
                 else{
                     if(!minimumJerk(xPositionsBuffer(0), xPositionsBuffer(1), (interpolationTime - interpolationTime0), swingLength, newPosition(0), newTwist(0))){
                         std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
@@ -393,11 +393,14 @@ bool FeetInterpolator::interpolateFoot(const std::vector<StepPhase> &stepPhase,
                         std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
                         return false;
                     }
+
+                    if(!minimumJerk(yawsBuffer(0), yawsBuffer(1), (interpolationTime - interpolationTime0), swingLength, yawAngle, newTwist(5))){
+                        std::cerr << "[FEETINTERPOLATOR] Unable to evaluate the trajectory";
+                        return false;
+                    }
+
                 }
                 newTransform.setPosition(newPosition);
-
-                double yawAngle, dummy;
-                yawAngle = yawSpline.evaluatePoint(interpolationTime, newTwist(5), dummy);
                 newTransform.setRotation(iDynTree::Rotation::RPY(0.0, 0.0, yawAngle));
 
                 if (newPosition(2) < 0){
