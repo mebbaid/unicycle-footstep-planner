@@ -1085,7 +1085,7 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
         return false;
     }
 
-    if (!createPhasesTimings()){
+    if (!createPhasesTimings(iDynTree::toEigen(DCMBoundaryConditionAtMergePoint.initialVelocity).norm())){
         std::cerr << "[FEETINTERPOLATOR] Failed while creating the standing periods." << std::endl;
         return false;
     }
