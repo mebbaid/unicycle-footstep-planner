@@ -281,9 +281,11 @@ class DCMTrajectoryGenerator
     /**
      * Add the Single and Double support phases for a general step
      * @param doubleSupportInitBoundaryCondition contains the boundary condition of the single support trajectory.
+     * @param firstSwingFoot contains the position and angle of the first swing foot before it starts to swing
      * @return true / false in case of success / failure.
      */
-    bool addFirstDoubleSupportPhase(const DCMTrajectoryPoint &doubleSupportInitBoundaryCondition);
+    bool addFirstDoubleSupportPhase(const DCMTrajectoryPoint &doubleSupportInitBoundaryCondition,
+                                    const StepList::const_iterator &firstSwingFoot);
 
     /**
      * Evaluate the DCM position for all time.
@@ -337,6 +339,7 @@ class DCMTrajectoryGenerator
      * Generate the Divergent Component of Motion trajectory.
      * @param orderedSteps vector containing the both left and right footprint sorted into ascending impactTime order;
      * @param firstStanceFoot is the footprint of the first stance foot;
+     * @param firstSwingFoot is the footprint of the first swing foot;
      * @param initPosition is the position of the DCM at the beginning of the trajectory;
      * @param initVelocity is the velocity of the DCM at the beginning of the trajectory;
      * @param phaseShift vector containing the index when a change of phase (SS -> DS and viceversa) occours.
@@ -344,6 +347,7 @@ class DCMTrajectoryGenerator
      */
     bool generateDCMTrajectory(const std::vector<StepList::const_iterator> &orderedSteps,
                                const StepList::const_iterator &firstStanceFoot,
+                               const StepList::const_iterator &firstSwingFoot,
                                const iDynTree::Vector2 &initPosition,
                                const iDynTree::Vector2 &initVelocity,
                                const std::vector<size_t> &phaseShift);

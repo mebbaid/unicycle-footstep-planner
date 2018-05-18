@@ -1120,11 +1120,13 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
         // evaluate witch foot is the first stance foot
         if(m_left.getSteps().begin()->impactTime == 0 && m_right.getSteps().begin()->impactTime == 0){
             firstStanceFoot = (m_left.getSteps()[1].impactTime > m_right.getSteps()[1].impactTime) ? m_left.getSteps().cbegin() : m_right.getSteps().cbegin();
+            firstSwingFoot = (m_left.getSteps()[1].impactTime > m_right.getSteps()[1].impactTime) ? m_right.getSteps().cbegin() : m_left.getSteps().cbegin();
         }
         else{
             firstStanceFoot = (m_left.getSteps().begin()->impactTime > m_right.getSteps().begin()->impactTime) ? m_left.getSteps().cbegin() : m_right.getSteps().cbegin();
+            firstSwingFoot = (m_left.getSteps().begin()->impactTime > m_right.getSteps().begin()->impactTime) ? m_right.getSteps().cbegin() : m_left.getSteps().cbegin();
         }
-        if(!m_DCMTrajGenerator.generateDCMTrajectory(m_orderedSteps, firstStanceFoot, initDCMPosition, initDCMVelocity, m_phaseShift)){
+        if(!m_DCMTrajGenerator.generateDCMTrajectory(m_orderedSteps, firstStanceFoot, firstSwingFoot, initDCMPosition, initDCMVelocity, m_phaseShift)){
             std::cerr << "[FEETINTERPOLATOR] Failed while computing the DCM trajectories." << std::endl;
             return false;
         }
