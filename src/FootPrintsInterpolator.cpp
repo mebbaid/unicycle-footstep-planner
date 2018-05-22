@@ -1115,7 +1115,7 @@ bool FeetInterpolator::interpolateDCM(const FootPrint &left, const FootPrint &ri
     initDCMVelocity = DCMBoundaryConditionAtMergePoint.initialVelocity;
 
     if(m_orderedSteps.size() != 0){
-        StepList::const_iterator firstStanceFoot;
+        StepList::const_iterator firstStanceFoot, firstSwingFoot;
         // during the first step both the left and the right feet impact time are equal to 0 therefore the next footsteps are used to
         // evaluate witch foot is the first stance foot
         if(m_left.getSteps().begin()->impactTime == 0 && m_right.getSteps().begin()->impactTime == 0){
